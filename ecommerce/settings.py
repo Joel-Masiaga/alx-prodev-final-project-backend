@@ -26,10 +26,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=i!1o_b&j#@pa79e#*k7rhj%b^12(sed=vl!+3mk5&b3d!t&*d'
+SECRET_KEY = os.environ('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ('DEBUG') == 'True'
 
 ALLOWED_HOSTS = []
 
@@ -200,7 +200,7 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
 
-FLUTTERWAVE_SECRET_KEY = ''
+FLUTTERWAVE_SECRET_KEY = os.environ('FLUTTERWAVE_SECRET_KEY')
 
 REACT_BASE_URL = os.getenv("REACT_BASE_URL", "http:/localhost:5173")
 
