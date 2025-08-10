@@ -34,7 +34,7 @@ class Product(models.Model):
         super().save(*args, **kwargs)
 
 class Cart(models.Model):
-    cart_code = models.CharField(max_length=11, unique=True)
+    cart_code = models.CharField(max_length=36, unique=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     paid = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
