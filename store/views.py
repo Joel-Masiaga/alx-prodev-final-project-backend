@@ -20,8 +20,15 @@ import uuid
 import requests
 from django.conf import settings
 
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+from drf_spectacular.types import OpenApiTypes
+
 BASE_URL = settings.REACT_BASE_URL
 
+@extend_schema(
+    summary="List all products",
+    responses=ProductSerializer(many=True)
+)
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def products(request):
@@ -29,6 +36,14 @@ def products(request):
     serializer = ProductSerializer(products, many=True)
     return Response(serializer.data)
 
+
+@extend_schema(
+    summary="Retrieve detailed product information",
+    parameters=[
+        OpenApiParameter(name="slug", description="Product slug", required=True, type=OpenApiTypes.STR)
+    ],
+    responses=DetailedProductSerializer
+)
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def product_detail(request, slug):
@@ -37,6 +52,20 @@ def product_detail(request, slug):
     return Response(serializer.data)
 
 
+@extend_schema(
+    summary="Add item to cart",
+    request=CartItemSerializer,
+    responses={
+        201: OpenApiTypes.OBJECT,
+        400: OpenApiTypes.OBJECT
+    },
+    examples=[
+        OpenApiExample(
+            "Add to cart example",
+            value={"cart_code": "abc123", "product_id": 1}
+        )
+    ]
+)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def add_item(request):
