@@ -7,14 +7,50 @@ paths:
   /api/add_item/:
     post:
       operationId: api_add_item_create
+      summary: Add item to cart
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CartItem'
+            examples:
+              AddToCartExample:
+                value:
+                  cart_code: abc123
+                  product_id: 1
+                summary: Add to cart example
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CartItem'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CartItem'
       security:
       - jwtAuth: []
       - {}
       responses:
-        '200':
-          description: No response body
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                AddToCartExample:
+                  value:
+                    cart_code: abc123
+                    product_id: 1
+                  summary: Add to cart example
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/delete_cartitem/:
     delete:
       operationId: api_delete_cartitem_destroy
@@ -92,11 +128,18 @@ paths:
   /api/product_detail/{slug}/:
     get:
       operationId: api_product_detail_retrieve
+      summary: Retrieve detailed product information
       parameters:
       - in: path
         name: slug
         schema:
           type: string
+        required: true
+      - in: query
+        name: slug
+        schema:
+          type: string
+        description: Product slug
         required: true
       tags:
       - api
@@ -105,7 +148,11 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedProduct'
+          description: ''
   /api/product_in_cart:
     get:
       operationId: api_product_in_cart_retrieve
@@ -119,7 +166,8 @@ paths:
           description: No response body
   /api/products/:
     get:
-      operationId: api_products_retrieve
+      operationId: api_products_list
+      summary: List all products
       tags:
       - api
       security:
@@ -127,7 +175,13 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+          description: ''
   /api/register/:
     post:
       operationId: api_register_create
@@ -232,6 +286,113 @@ paths:
           description: No response body
 components:
   schemas:
+    BlankEnum:
+      enum:
+      - ''
+    CartItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        product:
+          allOf:
+          - $ref: '#/components/schemas/Product'
+          readOnly: true
+        total:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - product
+      - total
+    CategoryEnum:
+      enum:
+      - electronics
+      - fashion
+      - beauty
+      - groceries
+      type: string
+      description: |-
+        * `electronics` - Electronics
+        * `fashion` - Fashion
+        * `beauty` - Beauty
+        * `groceries` - Groceries
+    DetailedProduct:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        slug:
+          type: string
+          nullable: true
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        image:
+          type: string
+          format: uri
+        description:
+          type: string
+          nullable: true
+        similar_products:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - image
+      - name
+      - price
+      - similar_products
+    NullEnum:
+      enum:
+      - null
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        slug:
+          type: string
+          nullable: true
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        image:
+          type: string
+          format: uri
+        description:
+          type: string
+          nullable: true
+        category:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/CategoryEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+      required:
+      - id
+      - image
+      - name
+      - price
     RoleEnum:
       enum:
       - customer

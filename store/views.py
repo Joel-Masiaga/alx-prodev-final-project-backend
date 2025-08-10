@@ -111,7 +111,7 @@ def get_cart_stat(request):
 @permission_classes([AllowAny])
 def get_cart(request):
     cart_code = request.query_params.get('cart_code')
-    cart = Cart.objects.get(cart_code=cart_code, paid=False)
+    cart = get_object_or_404(Cart, cart_code=cart_code, paid=False)
     serializer = CartSerializer(cart)
     return Response(serializer.data)
 
@@ -131,13 +131,19 @@ def update_quantity(request):
     except Exception as e:
         return Response({'error': str(e)}, status=400)
     
+
 @api_view(['DELETE'])
 @permission_classes([AllowAny])
-def delete_cartitem(request):
-    cartitem_id = request.data.get('item_id')
-    cartitem = CartItem.objects.get(id=cartitem_id)
-    cartitem.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
+def delete_cartitem(request, item_id):
+    try:
+        cartitem = CartItem.objects.get(id=item_id)
+        cartitem.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    except CartItem.DoesNotExist:
+        return Response(
+            {"error": "Cart item not found."},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -147,7 +153,7 @@ def initiate_payment(request):
             # Generate a unique transaction reference
             tx_ref = str(uuid.uuid4())
             cart_code = request.data.get('cart_code')
-            cart = Cart.objects.get(cart_code=cart_code)
+            cart = get_object_or_404(Cart, cart_code=cart_code)
             user = request.user
 
             amount = sum([item.quantity * item.product.price for item in cart.items.all()])
@@ -204,6 +210,7 @@ def initiate_payment(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def payment_callback(request):
     status = request.GET.get('status')
     tx_ref = request.GET.get('tx_ref')
@@ -217,7 +224,7 @@ def payment_callback(request):
             'Authorization': f'Bearer {settings.FLUTTERWAVE_SECRET_KEY}'
         }
 
-        response = request.get(f'https://api/flutterwave.com/v3/transactions/{transaction_id}/verify', headers=headers)
+        response = requests.get(f'https://api/flutterwave.com/v3/transactions/{transaction_id}/verify', headers=headers)
         response_data = response.json()
 
         if response_data['status'] == 'success':
