@@ -19,6 +19,8 @@ import dj_database_url
 
 load_dotenv() 
 
+ENVIRONMENT = os.getenv('ENVIRONMENT', default='production')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -30,9 +32,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG') == 'True'
+if ENVIRONMENT == 'development':
+    DEBUG = True
+else:
+    DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -94,8 +99,9 @@ DATABASES = {
     }
 }
 
-db_url = os.getenv('DB_URL')
-if db_url:
+POSTGRES_LOCALLY = True
+if ENVIRONMENT == 'production' or POSTGRES_LOCALLY == True:
+    db_url = os.getenv('DB_URL')
     DATABASES['default'] = dj_database_url.parse(db_url)
 
 
